@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.acruxsolutions.hnbustracker.MainActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#009688"
+        android:layout_weight="1">
+
+        <ImageButton
+            android:id="@+id/shareLocation"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:background="@drawable/location"
+            android:foregroundGravity="center_horizontal|center_vertical"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#607D8B"
+        android:layout_weight="1">
+
+        <ImageButton
+            android:id="@+id/viewBus"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:background="@drawable/bus"
+            android:foregroundGravity="center_horizontal|center_vertical"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+
+    </RelativeLayout>
+
+</LinearLayout>
