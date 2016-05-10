@@ -1,11 +1,11 @@
 package com.acruxsolutions.hnbustracker;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,7 +19,10 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-public class ShareLocationActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
+import java.text.DateFormat;
+import java.util.Date;
+
+public class ShareLocationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     // LogCat tag
@@ -37,9 +40,14 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     private LocationRequest mLocationRequest;
 
+    // Location updates intervals in sec
+    private static int UPDATE_INTERVAL = 10000; // 10 sec
+    private static int FATEST_INTERVAL = 5000; // 5 sec
+    private static int DISPLACEMENT = 10; // 10 meters
+
     // UI elements
     private TextView lblLocation;
-    private Button btnStartLocationUpdates;
+    private Button btnShowLocation, btnStartLocationUpdates;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +55,7 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
         setContentView(R.layout.activity_share_location);
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
-        Button btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
+        btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
 
         // First we need to check availability of play services
@@ -91,7 +99,6 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
     protected void onResume() {
         super.onResume();
 
-        buildGoogleApiClient();
         checkPlayServices();
 
         // Resuming the periodic location updates
@@ -116,19 +123,9 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     /**
      * Method to display the location on UI
-     */
+     * */
     private void displayLocation() {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
         mLastLocation = LocationServices.FusedLocationApi
                 .getLastLocation(mGoogleApiClient);
 
@@ -147,7 +144,7 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     /**
      * Method to toggle periodic location updates
-     */
+     * */
     private void togglePeriodicLocationUpdates() {
         if (!mRequestingLocationUpdates) {
             // Changing the button text
@@ -177,7 +174,7 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     /**
      * Creating google api client object
-     */
+     * */
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -187,21 +184,18 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     /**
      * Creating location request object
-     */
+     * */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        int UPDATE_INTERVAL = 10000;
         mLocationRequest.setInterval(UPDATE_INTERVAL);
-        int FATEST_INTERVAL = 5000;
         mLocationRequest.setFastestInterval(FATEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        int DISPLACEMENT = 10;
         mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
     /**
      * Method to verify google play services on the device
-     */
+     * */
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil
                 .isGooglePlayServicesAvailable(this);
@@ -222,19 +216,9 @@ public class ShareLocationActivity extends Activity implements GoogleApiClient.C
 
     /**
      * Starting the location updates
-     */
+     * */
     protected void startLocationUpdates() {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
 
