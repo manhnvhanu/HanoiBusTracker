@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/view_bg"
+    android:background="#E3F2FD"
     android:gravity="center_horizontal"
     android:orientation="vertical" >
 
@@ -39,17 +39,23 @@
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:text="@string/btn_get_location"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:layout_gravity="center_horizontal" />
 
-    <Button
-        android:id="@+id/btnLocationUpdates"
+
+    <Switch
+        android:id="@+id/switchButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:background="@color/btn_bg"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        android:text="@string/btn_start_location_updates"
-        android:textColor="@color/white" />
+        android:layout_marginTop="20dp"
+        android:text="Android Switch Button 1" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Android Switch Button" />
+
+
 
 </LinearLayout>

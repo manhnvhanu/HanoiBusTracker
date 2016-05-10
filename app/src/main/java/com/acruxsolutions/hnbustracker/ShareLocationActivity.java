@@ -9,18 +9,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-
-import java.text.DateFormat;
-import java.util.Date;
 
 public class ShareLocationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
@@ -47,7 +50,18 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     // UI elements
     private TextView lblLocation;
-    private Button btnShowLocation, btnStartLocationUpdates;
+    private Button btnShowLocation;
+
+
+    //Switch button
+    Switch switchButton;
+    TextView textView;
+    String switchOn = "Turn ON Location update";
+    String switchOff = "Turn OFF Location update";
+
+    //GeoFire Ref
+    GeoFire geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +70,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
-        btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
 
         // First we need to check availability of play services
         if (checkPlayServices()) {
@@ -76,16 +89,33 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             }
         });
 
-        // Toggling the periodic location updates
-        btnStartLocationUpdates.setOnClickListener(new View.OnClickListener() {
 
+        //Switch button
+
+        // Toggling the periodic location updates
+        switchButton = (Switch) findViewById(R.id.switchButton);
+        textView = (TextView) findViewById(R.id.textView);
+
+        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                togglePeriodicLocationUpdates();
+            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
+                if (bChecked) {
+                    textView.setText(switchOn);
+                    togglePeriodicLocationUpdates();
+                } else {
+                    textView.setText(switchOff);
+                }
             }
         });
 
+        if (switchButton.isChecked()) {
+            textView.setText(switchOn);
+        } else {
+            textView.setText(switchOff);
+        }
+
     }
+
 
     @Override
     protected void onStart() {
@@ -123,9 +153,19 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Method to display the location on UI
-     * */
+     */
     private void displayLocation() {
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         mLastLocation = LocationServices.FusedLocationApi
                 .getLastLocation(mGoogleApiClient);
 
@@ -144,12 +184,13 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Method to toggle periodic location updates
-     * */
+     */
     private void togglePeriodicLocationUpdates() {
         if (!mRequestingLocationUpdates) {
             // Changing the button text
-            btnStartLocationUpdates
-                    .setText(getString(R.string.btn_stop_location_updates));
+
+//            switchButton.setChecked(true);
+
 
             mRequestingLocationUpdates = true;
 
@@ -160,8 +201,9 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         } else {
             // Changing the button text
-            btnStartLocationUpdates
-                    .setText(getString(R.string.btn_start_location_updates));
+
+//            switchButton.setChecked(false);
+
 
             mRequestingLocationUpdates = false;
 
@@ -174,7 +216,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Creating google api client object
-     * */
+     */
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -184,7 +226,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Creating location request object
-     * */
+     */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(UPDATE_INTERVAL);
@@ -195,7 +237,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Method to verify google play services on the device
-     * */
+     */
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil
                 .isGooglePlayServicesAvailable(this);
@@ -216,11 +258,22 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     /**
      * Starting the location updates
-     * */
+     */
     protected void startLocationUpdates() {
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
+
 
     }
 
@@ -262,11 +315,32 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         // Assign the new location
         mLastLocation = location;
 
-        Toast.makeText(getApplicationContext(), "Location changed!",
-                Toast.LENGTH_SHORT).show();
+        double latitude = mLastLocation.getLatitude();
+        double longitude = mLastLocation.getLongitude();
+
+
+        Toast.makeText(getApplicationContext(), "Location changed!" + ": " + latitude + ", " + longitude, Toast.LENGTH_SHORT).show();
 
         // Displaying the new location on UI
         displayLocation();
     }
 
+
+    //geofire to write location
+    public void setLocationdata(String mBusNumber){
+        geoFire.setLocation(mBusNumber, new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, FirebaseError error) {
+                if (error != null) {
+                    System.err.println("There was an error saving the location to GeoFire: " + error);
+                } else {
+                    System.out.println("Location saved on server successfully!");
+                }
+            }
+        });
+    }
+
+    public void removeLocationData(){
+
+    }
 }
