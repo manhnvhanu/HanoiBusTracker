@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +56,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     // UI elements
     private TextView lblLocation;
     private Button btnShowLocation;
+    private EditText busNumberSelect;
 
 
     //Switch button
@@ -71,7 +73,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
 
     //Share preferencse
-    public static final String myRefs = "HnBusTracker" ;
+    public static final String myRefs = "HnBusTracker";
     public static final String uuidTags = "UUID";
     public static final String firstTimeTag = "firstTime";
 
@@ -121,6 +123,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                     textView.setText(switchOn);
                     togglePeriodicLocationUpdates();
                 } else {
+                    removeLocationData("manhnv - " + sharedpreferences.getString(uuidTags,""));
                     textView.setText(switchOff);
                 }
             }
@@ -293,8 +296,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 mGoogleApiClient, mLocationRequest, this);
 
 
-
-
     }
 
     /**
@@ -344,14 +345,14 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         // Displaying the new location on UI
         displayLocation();
 
-        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags,""));
+        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags, ""));
     }
 
 
     //geofire to write location
-    public void setLocationdata(String mBusNumber){
+    public void setLocationdata(String mBusNumber) {
 
-        geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+        buildGeoFireClient();
         geoFire.setLocation(mBusNumber, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
             @Override
             public void onComplete(String key, FirebaseError error) {
@@ -364,10 +365,11 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         });
     }
 
-    public void removeLocationData(){
+    public void removeLocationData(String keyLocation) {
+        buildGeoFireClient();
+        geoFire.removeLocation(keyLocation);
 
     }
-
 
 
     /**
@@ -384,18 +386,18 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             if (firstTime) {
                 SharedPreferences.Editor editor = sharedpreferences.edit();
                 editor.putBoolean(firstTimeTag, false);
-                editor.putString(uuidTags,genUUID());
+                editor.putString(uuidTags, genUUID());
                 editor.apply();
 
 
-                Toast.makeText(getApplication(), "1st Run: " + sharedpreferences.getString(uuidTags,""), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "1st Run: " + sharedpreferences.getString(uuidTags, ""), Toast.LENGTH_SHORT).show();
 
             } else {
 
 //                double latitude = mLastLocation.getLatitude();
 //                double longitude = mLastLocation.getLongitude();
 
-                Toast.makeText(getApplication(), "Not 1st Run",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "Not 1st Run", Toast.LENGTH_SHORT).show();
             }
         }
         return firstTime;
@@ -403,8 +405,12 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     //generate unique ID
 
-    private static String genUUID(){
+    private static String genUUID() {
         return UUID.randomUUID().toString();
 
+    }
+
+    public void buildGeoFireClient() {
+        geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
     }
 }
