@@ -94,28 +94,28 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         switchButton = (Switch) findViewById(R.id.switchButton);
         textView = (TextView) findViewById(R.id.textView);
 
+        isFirstTime();
+
+        buildGeoFireClient();
 
         switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
                 if (bChecked) {
 
-                    busNumberSelect = (EditText) findViewById(R.id.busNumber);
-                    assert busNumberSelect != null;
-                    busNumber = busNumberSelect.getText().toString();
+                    geoFire.setLocation("manhnv - " + genUUID(), new GeoLocation(20.9878249, 105.7970242), new GeoFire.CompletionListener() {
+                        @Override
+                        public void onComplete(String key, FirebaseError error) {
+                            if (error != null) {
+                                System.err.println("There was an error saving the location to GeoFire: " + error);
+                            } else {
+                                System.out.println("Location saved on server successfully!");
+                            }
+                        }
+                    });
 
-                    if (busNumber.isEmpty()) {
-                        switchButton.setChecked(false);
-                        Toast.makeText(getApplicationContext(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
-
-
-                    } else {
-                        setLocationdata(busNumber + " - " + sharedpreferences.getString(uuidTags, ""));
-                        togglePeriodicLocationUpdates();
-                    }
                 } else {
-                    removeLocationData(busNumber + " - " + sharedpreferences.getString(uuidTags, ""));
-                    textView.setText(switchOff);
+
                 }
             }
         });
@@ -138,7 +138,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 //        }
 
 
-        isFirstTime();
 
         // First we need to check availability of play services
         if (checkPlayServices()) {
@@ -386,6 +385,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     public void setLocationdata(String mBusNumber) {
 
         buildGeoFireClient();
+
         geoFire.setLocation(mBusNumber, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
             @Override
             public void onComplete(String key, FirebaseError error) {
