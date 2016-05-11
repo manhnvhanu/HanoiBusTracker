@@ -23,6 +23,8 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.UUID;
+
 public class ShareLocationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
@@ -62,6 +64,14 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     //First time run
     private Boolean firstTime = null;
+
+
+    //Share preferencse
+    public static final String myRefs = "HnBusTracker" ;
+    public static final String uuidTags = "UUID";
+    public static final String firstTimeTag = "firstTime";
+
+    SharedPreferences sharedpreferences;
 
 
     @Override
@@ -357,24 +367,33 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
      */
     private boolean isFirstTime() {
         if (firstTime == null) {
-            SharedPreferences mPreferences = this.getSharedPreferences("first_time", Context.MODE_PRIVATE);
+            sharedpreferences = this.getSharedPreferences(myRefs, Context.MODE_PRIVATE);
 
-            firstTime = mPreferences.getBoolean("firstTime", true);
+            firstTime = sharedpreferences.getBoolean(firstTimeTag, true);
             if (firstTime) {
-                SharedPreferences.Editor editor = mPreferences.edit();
-                editor.putBoolean("firstTime", false);
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putBoolean(firstTimeTag, false);
+                editor.putString(uuidTags,genUUID());
                 editor.apply();
 
 
-                double latitude = mLastLocation.getLatitude();
-                double longitude = mLastLocation.getLongitude();
-
-                Toast.makeText(getApplication(), "1st Run: " + latitude + ", " + longitude, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "1st Run: " + sharedpreferences.getString(uuidTags,""), Toast.LENGTH_SHORT).show();
 
             } else {
+
+//                double latitude = mLastLocation.getLatitude();
+//                double longitude = mLastLocation.getLongitude();
+
                 Toast.makeText(getApplication(), "Not 1st Run",Toast.LENGTH_SHORT).show();
             }
         }
         return firstTime;
+    }
+
+    //generate unique ID
+
+    private static String genUUID(){
+        return UUID.randomUUID().toString();
+
     }
 }
