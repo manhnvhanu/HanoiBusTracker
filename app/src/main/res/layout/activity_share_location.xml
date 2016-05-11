@@ -62,7 +62,7 @@
         android:inputType="numberSigned"
         android:digits="0123456789"
         android:ems="10"
-        android:id="@+id/editText"
+        android:id="@+id/busNumber"
         android:layout_gravity="center_horizontal" />
 
 

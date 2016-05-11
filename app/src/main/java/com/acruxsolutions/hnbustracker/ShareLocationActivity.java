@@ -57,6 +57,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     private TextView lblLocation;
     private Button btnShowLocation;
     private EditText busNumberSelect;
+    private String busNumber;
 
 
     //Switch button
@@ -89,6 +90,54 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
 
+        // Toggling the periodic location updates
+        switchButton = (Switch) findViewById(R.id.switchButton);
+        textView = (TextView) findViewById(R.id.textView);
+
+
+        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
+                if (bChecked) {
+
+                    busNumberSelect = (EditText) findViewById(R.id.busNumber);
+                    assert busNumberSelect != null;
+                    busNumber = busNumberSelect.getText().toString();
+
+                    if (busNumber.isEmpty()) {
+                        switchButton.setChecked(false);
+                        Toast.makeText(getApplicationContext(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
+
+
+                    } else {
+                        setLocationdata(busNumber + " - " + sharedpreferences.getString(uuidTags, ""));
+                        togglePeriodicLocationUpdates();
+                    }
+                } else {
+                    removeLocationData(busNumber + " - " + sharedpreferences.getString(uuidTags, ""));
+                    textView.setText(switchOff);
+                }
+            }
+        });
+
+//        if (switchButton.isChecked()) {
+//            textView.setText(switchOn);
+//        } else {
+//            textView.setText(switchOff);
+//        }
+
+
+//        if (busNumberSelect != null) {
+//            busNumber = busNumberSelect.getText().toString();
+////            Toast.makeText(getApplicationContext(),busNumber,Toast.LENGTH_SHORT).show();
+//
+//
+//        } else {
+//            Toast.makeText(getApplicationContext(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
+//
+//        }
+
+
         isFirstTime();
 
         // First we need to check availability of play services
@@ -112,22 +161,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         //Switch button
 
-        // Toggling the periodic location updates
-        switchButton = (Switch) findViewById(R.id.switchButton);
-        textView = (TextView) findViewById(R.id.textView);
-
-        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
-                if (bChecked) {
-                    textView.setText(switchOn);
-                    togglePeriodicLocationUpdates();
-                } else {
-                    removeLocationData("manhnv - " + sharedpreferences.getString(uuidTags,""));
-                    textView.setText(switchOff);
-                }
-            }
-        });
 
         if (switchButton.isChecked()) {
             textView.setText(switchOn);
@@ -345,7 +378,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         // Displaying the new location on UI
         displayLocation();
 
-        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags, ""));
+//        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags, ""));
     }
 
 
