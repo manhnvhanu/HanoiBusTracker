@@ -16,6 +16,10 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -60,7 +64,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     String switchOff = "Turn OFF Location update";
 
     //GeoFire Ref
-//    GeoFire geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+    GeoFire geoFire;
 
     //First time run
     private Boolean firstTime = null;
@@ -78,6 +82,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share_location);
+        Firebase.setAndroidContext(this);
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
@@ -288,6 +293,8 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 mGoogleApiClient, mLocationRequest, this);
 
 
+
+
     }
 
     /**
@@ -336,26 +343,30 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         // Displaying the new location on UI
         displayLocation();
+
+        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags,""));
     }
 
 
     //geofire to write location
-//    public void setLocationdata(String mBusNumber){
-//        geoFire.setLocation(mBusNumber, new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
-//            @Override
-//            public void onComplete(String key, FirebaseError error) {
-//                if (error != null) {
-//                    System.err.println("There was an error saving the location to GeoFire: " + error);
-//                } else {
-//                    System.out.println("Location saved on server successfully!");
-//                }
-//            }
-//        });
-//    }
+    public void setLocationdata(String mBusNumber){
 
-//    public void removeLocationData(){
-//
-//    }
+        geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+        geoFire.setLocation(mBusNumber, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, FirebaseError error) {
+                if (error != null) {
+                    System.err.println("There was an error saving the location to GeoFire: " + error);
+                } else {
+                    System.out.println("Location saved on server successfully!");
+                }
+            }
+        });
+    }
+
+    public void removeLocationData(){
+
+    }
 
 
 
