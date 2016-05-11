@@ -1,6 +1,8 @@
 package com.acruxsolutions.hnbustracker;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -14,10 +16,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -60,7 +58,10 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     String switchOff = "Turn OFF Location update";
 
     //GeoFire Ref
-    GeoFire geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+//    GeoFire geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
+
+    //First time run
+    private Boolean firstTime = null;
 
 
     @Override
@@ -70,6 +71,8 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
+
+        isFirstTime();
 
         // First we need to check availability of play services
         if (checkPlayServices()) {
@@ -327,20 +330,51 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
 
     //geofire to write location
-    public void setLocationdata(String mBusNumber){
-        geoFire.setLocation(mBusNumber, new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
-            @Override
-            public void onComplete(String key, FirebaseError error) {
-                if (error != null) {
-                    System.err.println("There was an error saving the location to GeoFire: " + error);
-                } else {
-                    System.out.println("Location saved on server successfully!");
-                }
+//    public void setLocationdata(String mBusNumber){
+//        geoFire.setLocation(mBusNumber, new GeoLocation(37.7853889, -122.4056973), new GeoFire.CompletionListener() {
+//            @Override
+//            public void onComplete(String key, FirebaseError error) {
+//                if (error != null) {
+//                    System.err.println("There was an error saving the location to GeoFire: " + error);
+//                } else {
+//                    System.out.println("Location saved on server successfully!");
+//                }
+//            }
+//        });
+//    }
+
+//    public void removeLocationData(){
+//
+//    }
+
+
+
+    /**
+     * Checks if the user is opening the app for the first time.
+     * Note that this method should be placed inside an activity and it can be called multiple times.
+     *
+     * @return boolean
+     */
+    private boolean isFirstTime() {
+        if (firstTime == null) {
+            SharedPreferences mPreferences = this.getSharedPreferences("first_time", Context.MODE_PRIVATE);
+
+            firstTime = mPreferences.getBoolean("firstTime", true);
+            if (firstTime) {
+                SharedPreferences.Editor editor = mPreferences.edit();
+                editor.putBoolean("firstTime", false);
+                editor.apply();
+
+
+                double latitude = mLastLocation.getLatitude();
+                double longitude = mLastLocation.getLongitude();
+
+                Toast.makeText(getApplication(), "1st Run: " + latitude + ", " + longitude, Toast.LENGTH_SHORT).show();
+
+            } else {
+                Toast.makeText(getApplication(), "Not 1st Run",Toast.LENGTH_SHORT).show();
             }
-        });
-    }
-
-    public void removeLocationData(){
-
+        }
+        return firstTime;
     }
 }
