@@ -93,38 +93,31 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         // Toggling the periodic location updates
         switchButton = (Switch) findViewById(R.id.switchButton);
         textView = (TextView) findViewById(R.id.textView);
+        busNumberSelect = (EditText) findViewById(R.id.busNumber);
 
         isFirstTime();
 
         buildGeoFireClient();
+
+//        if (isEmpty(busNumberSelect)) {
+//            Toast.makeText(getApplication(), "Empty text field", Toast.LENGTH_SHORT).show();
+//        } else {
+//            Toast.makeText(getApplication(), "Not empty text field", Toast.LENGTH_SHORT).show();
+//
+//        }
 
         switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
                 if (bChecked) {
 
-                    geoFire.setLocation("manhnv - " + genUUID(), new GeoLocation(20.9878249, 105.7970242), new GeoFire.CompletionListener() {
-                        @Override
-                        public void onComplete(String key, FirebaseError error) {
-                            if (error != null) {
-                                System.err.println("There was an error saving the location to GeoFire: " + error);
-                            } else {
-                                System.out.println("Location saved on server successfully!");
-                            }
-                        }
-                    });
+                    togglePeriodicLocationUpdates();
 
                 } else {
 
                 }
             }
         });
-
-//        if (switchButton.isChecked()) {
-//            textView.setText(switchOn);
-//        } else {
-//            textView.setText(switchOff);
-//        }
 
 
 //        if (busNumberSelect != null) {
@@ -136,7 +129,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 //            Toast.makeText(getApplicationContext(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
 //
 //        }
-
 
 
         // First we need to check availability of play services
@@ -156,9 +148,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 displayLocation();
             }
         });
-
-
-        //Switch button
 
 
         if (switchButton.isChecked()) {
@@ -250,6 +239,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             // Starting the location updates
             startLocationUpdates();
 
+
             Log.d(TAG, "Periodic location updates started!");
 
         } else {
@@ -328,6 +318,8 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 mGoogleApiClient, mLocationRequest, this);
 
 
+
+
     }
 
     /**
@@ -371,13 +363,25 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         double latitude = mLastLocation.getLatitude();
         double longitude = mLastLocation.getLongitude();
 
+        sharedpreferences = this.getSharedPreferences(myRefs, Context.MODE_PRIVATE);
+
 
         Toast.makeText(getApplicationContext(), "Location changed!" + ": " + latitude + ", " + longitude, Toast.LENGTH_SHORT).show();
+
+        geoFire.setLocation("manhnv - " + sharedpreferences.getString(uuidTags,""), new GeoLocation(latitude, longitude), new GeoFire.CompletionListener() {
+            @Override
+            public void onComplete(String key, FirebaseError error) {
+                if (error != null) {
+                    System.err.println("There was an error saving the location to GeoFire: " + error);
+                } else {
+                    System.out.println("Location saved on server successfully!");
+                }
+            }
+        });
 
         // Displaying the new location on UI
         displayLocation();
 
-//        setLocationdata("manhnv - " + sharedpreferences.getString(uuidTags, ""));
     }
 
 
@@ -398,6 +402,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         });
     }
 
+    //Remove Location data pushed by users
     public void removeLocationData(String keyLocation) {
         buildGeoFireClient();
         geoFire.removeLocation(keyLocation);
@@ -422,13 +427,9 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 editor.putString(uuidTags, genUUID());
                 editor.apply();
 
-
                 Toast.makeText(getApplication(), "1st Run: " + sharedpreferences.getString(uuidTags, ""), Toast.LENGTH_SHORT).show();
 
             } else {
-
-//                double latitude = mLastLocation.getLatitude();
-//                double longitude = mLastLocation.getLongitude();
 
                 Toast.makeText(getApplication(), "Not 1st Run", Toast.LENGTH_SHORT).show();
             }
@@ -437,13 +438,22 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     }
 
     //generate unique ID
-
     private static String genUUID() {
         return UUID.randomUUID().toString();
 
     }
 
+    //Build GeoFire Client
     public void buildGeoFireClient() {
         geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
     }
+
+    //Check if editext is empty
+    private boolean isEmpty(EditText etText) {
+        if (etText.getText().toString().trim().length() > 0)
+            return false;
+        return true;
+    }
+
+
 }
