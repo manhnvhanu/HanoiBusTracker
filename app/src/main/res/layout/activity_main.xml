@@ -9,14 +9,15 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#009688"
+        android:background="#607D8B"
+
         android:layout_weight="1">
 
         <ImageButton
             android:id="@+id/shareLocation"
             android:layout_width="150dp"
             android:layout_height="150dp"
-            android:background="@drawable/location"
+            android:background="@drawable/marker"
             android:foregroundGravity="center_horizontal|center_vertical"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true" />
@@ -26,7 +27,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#607D8B"
+        android:background="#FF3D00"
         android:layout_weight="1">
 
         <ImageButton

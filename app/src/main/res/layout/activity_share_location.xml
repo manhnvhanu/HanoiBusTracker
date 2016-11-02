@@ -1,23 +1,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E57373"
+    android:background="#FFFFFF"
     android:gravity="center_horizontal"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:weightSum="1">
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="60dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="40dp"
         android:src="@drawable/marker" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="20dp"
         android:text="@string/lbl_you_are_at"
-        android:textColor="@color/white"
+        android:textColor="#000"
         android:textSize="25dp"
         android:textStyle="bold" />
 
@@ -26,44 +26,48 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
+        android:text="20.12345, 105.12454"
         android:padding="15dp"
-        android:textColor="@color/white"
-        android:textSize="16dp" />
+        android:textColor="#000"
+        android:textSize="20dp" />
 
     <Button
         android:id="@+id/btnShowLocation"
+        style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="40dp"
-        android:background="@color/btn_bg"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
+        android:padding="20dp"
         android:text="@string/btn_get_location"
-        android:textColor="@color/white"
-        android:layout_gravity="center_horizontal" />
+        android:textColor="#000"
+        android:theme="@style/MyButton" />
 
 
     <Switch
         android:id="@+id/switchButton"
-        android:layout_width="wrap_content"
+        android:layout_width="263dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
-        android:text="Android Switch Button 1" />
+        android:layout_weight="0.3"
+        android:text="Share your bus location"
+        android:textSize="20dp" />
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Android Switch Button" />
+        android:layout_height="wrap_content" />
 
     <EditText
-        android:layout_width="252dp"
+        android:id="@+id/busNumber"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:inputType="numberSigned"
+        android:layout_gravity="center_horizontal"
         android:digits="0123456789"
         android:ems="10"
-        android:id="@+id/busNumber"
-        android:layout_gravity="center_horizontal" />
+        android:gravity="center_vertical|center_horizontal"
+        android:inputType="numberSigned" />
 
 
 </LinearLayout>

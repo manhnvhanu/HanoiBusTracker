@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
@@ -12,6 +13,8 @@ import android.view.View;
 import android.widget.ImageButton;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+
 
     ImageButton shareLocation, viewBus;
 
@@ -26,16 +29,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         shareLocation = (ImageButton) findViewById(R.id.shareLocation);
         viewBus = (ImageButton) findViewById(R.id.viewBus);
 
+
+
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
-        boolean has3G = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)
-                .isConnectedOrConnecting();
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
+        //status of a network interface variable
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+
+
+        //check if 3G is on
+        boolean isMobileConn = networkInfo.isConnected();
+
+
+        //if GPS is off
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+            //show alert to enable GPS
             showGPSDisabledAlertToUser();
 
-            if(!has3G){
+            //if 3G is off
+            if(!isMobileConn){
+
+                //show alert to turn on 3G
                 show3GDisabledAlertToUser();
             }
         }
@@ -44,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+
+    /**
+     * Show alert to turn on GPS
+     */
     private void showGPSDisabledAlertToUser() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Would you like to enable GPS on your device?")
@@ -68,6 +89,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         alert.show();
     }
 
+    /**
+     * Show alert to turn on 3G
+     */
     private void show3GDisabledAlertToUser() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Would you like to enable 3G on your device?")
@@ -92,6 +116,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         alert.show();
     }
 
+
+    //Handle many buttons click events
     @Override
     public void onClick(View v) {
 

@@ -1,11 +1,16 @@
 package com.acruxsolutions.hnbustracker;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -33,8 +38,9 @@ import java.util.UUID;
 public class ShareLocationActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    // LogCat tag
+    // Logcat tag
     private static final String TAG = MainActivity.class.getSimpleName();
+
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
 
@@ -48,36 +54,28 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     private LocationRequest mLocationRequest;
 
-    // Location updates intervals in sec
-    private static int UPDATE_INTERVAL = 10000; // 10 sec
-    private static int FATEST_INTERVAL = 5000; // 5 sec
-    private static int DISPLACEMENT = 10; // 10 meters
-
     // UI elements
     private TextView lblLocation;
-    private Button btnShowLocation;
     private EditText busNumberSelect;
-    private String busNumber;
-
 
     //Switch button
     Switch switchButton;
     TextView textView;
-    String switchOn = "Turn ON Location update";
-    String switchOff = "Turn OFF Location update";
+    String switchOn = "Location update is ON";
+    String switchOff = "Location update is OF";
+    Button btnShowLocation;
 
-    //GeoFire Ref
+    //GeoFire Reference
     GeoFire geoFire;
 
-    //First time run
+    //First time run boolean variable
     private Boolean firstTime = null;
 
 
-    //Share preferencse
+    //SharedPreferences variables
     public static final String myRefs = "HnBusTracker";
     public static final String uuidTags = "UUID";
     public static final String firstTimeTag = "firstTime";
-
     SharedPreferences sharedpreferences;
 
 
@@ -85,64 +83,24 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share_location);
+
+
+        // Firstly, check availability of play services
+        if (checkPlayServices()) {
+            // Building the GoogleApi client
+            buildGoogleApiClient();
+            createLocationRequest();
+        }
+
+
         Firebase.setAndroidContext(this);
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
 
-        // Toggling the periodic location updates
-        switchButton = (Switch) findViewById(R.id.switchButton);
-        textView = (TextView) findViewById(R.id.textView);
-        busNumberSelect = (EditText) findViewById(R.id.busNumber);
-
-        isFirstTime();
-
-        buildGeoFireClient();
-
-//        if (isEmpty(busNumberSelect)) {
-//            Toast.makeText(getApplication(), "Empty text field", Toast.LENGTH_SHORT).show();
-//        } else {
-//            Toast.makeText(getApplication(), "Not empty text field", Toast.LENGTH_SHORT).show();
-//
-//        }
-
-        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
-                if (bChecked) {
-
-                    togglePeriodicLocationUpdates();
-
-                } else {
-
-                }
-            }
-        });
-
-
-//        if (busNumberSelect != null) {
-//            busNumber = busNumberSelect.getText().toString();
-////            Toast.makeText(getApplicationContext(),busNumber,Toast.LENGTH_SHORT).show();
-//
-//
-//        } else {
-//            Toast.makeText(getApplicationContext(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
-//
-//        }
-
-
-        // First we need to check availability of play services
-        if (checkPlayServices()) {
-
-            // Building the GoogleApi client
-            buildGoogleApiClient();
-
-            createLocationRequest();
-        }
 
         // Show location button click listener
         btnShowLocation.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 displayLocation();
@@ -150,14 +108,119 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         });
 
 
-        if (switchButton.isChecked()) {
-            textView.setText(switchOn);
-        } else {
-            textView.setText(switchOff);
-        }
+        // Toggling the periodic location updates
+        switchButton = (Switch) findViewById(R.id.switchButton);
+        textView = (TextView) findViewById(R.id.textView);
+        busNumberSelect = (EditText) findViewById(R.id.busNumber);
+
+
+        //Check if this is the first time activity running
+        isFirstTime();
+
+        buildGeoFireClient();
+
+        //Listening on touch event
+        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
+
+                //if switch button is on
+                if (bChecked) {
+
+                    //if bus number is not entered yet
+                    if (isEmpty(busNumberSelect)) {
+                        Toast.makeText(getApplication(), "Enter Bus Number", Toast.LENGTH_SHORT).show();
+                        switchButton.setChecked(false);
+                    } else {
+
+                        //bus number entered
+                        //start peridical location update
+                        togglePeriodicLocationUpdates();
+
+                        //show notification
+                        showNotification();
+                        textView.setText(switchOn);
+
+                    }
+
+                } else {
+
+                    //wiped out data pushed by user if switch button is off
+                    removeLocationData(busNumberSelect.getText().toString() + " - " + sharedpreferences.getString(uuidTags, ""));
+
+                    //clear notification
+                    NotificationManager mNotificationManager =
+                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    mNotificationManager.cancel(0);
+
+                    textView.setText(switchOff);
+
+                }
+            }
+        });
+
 
     }
 
+
+    /**
+     * Create notification
+     */
+    public void showNotification() {
+        Notification.Builder mBuilder =
+                new Notification.Builder(this)
+                        .setSmallIcon(R.drawable.marker)
+                        .setContentTitle("Location Updating")
+                        .setContentText("Periodical Location updates");
+
+        Intent resultIntent = new Intent(this, ShareLocationActivity.class);
+        resultIntent.setAction(Intent.ACTION_MAIN);
+        resultIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                resultIntent, 0);
+
+        mBuilder.setContentIntent(pendingIntent);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager.notify(1, mBuilder.build());
+    }
+
+    /**
+     * Save UI state changes to the savedInstanceState
+     * @param savedInstanceState
+     */
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+
+        busNumberSelect = (EditText) findViewById(R.id.busNumber);
+        switchButton = (Switch) findViewById(R.id.switchButton);
+
+        if (switchButton != null) {
+            savedInstanceState.putBoolean("isChecked", switchButton.isChecked());
+        }
+        savedInstanceState.putString("busNumberString", busNumberSelect.getText().toString());
+    }
+
+
+    /**
+     * Restore UI state from the savedInstanceState.
+     * @param savedInstanceState
+     */
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        boolean isChecked = savedInstanceState.getBoolean("isChecked");
+        String busNumberString = savedInstanceState.getString("busNumberString");
+
+        busNumberSelect = (EditText) findViewById(R.id.busNumber);
+        switchButton = (Switch) findViewById(R.id.switchButton);
+
+        busNumberSelect.setText(busNumberString);
+        switchButton.setChecked(isChecked);
+
+    }
 
     @Override
     protected void onStart() {
@@ -186,6 +249,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             mGoogleApiClient.disconnect();
         }
     }
+
 
     @Override
     protected void onPause() {
@@ -220,7 +284,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
         } else {
 
             lblLocation
-                    .setText("(Couldn't get the location. Make sure location is enabled on the device)");
+                    .setText("(Couldn't get the location. Turn on GPS and 3G)");
         }
     }
 
@@ -229,11 +293,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
      */
     private void togglePeriodicLocationUpdates() {
         if (!mRequestingLocationUpdates) {
-            // Changing the button text
-
-//            switchButton.setChecked(true);
-
-
             mRequestingLocationUpdates = true;
 
             // Starting the location updates
@@ -243,10 +302,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             Log.d(TAG, "Periodic location updates started!");
 
         } else {
-            // Changing the button text
-
-//            switchButton.setChecked(false);
-
 
             mRequestingLocationUpdates = false;
 
@@ -272,14 +327,17 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
      */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
+        int UPDATE_INTERVAL = 10000;
         mLocationRequest.setInterval(UPDATE_INTERVAL);
+        int FATEST_INTERVAL = 5000;
         mLocationRequest.setFastestInterval(FATEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        int DISPLACEMENT = 10;
         mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
     /**
-     * Method to verify google play services on the device
+     * Verify google play services on the device
      */
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil
@@ -290,7 +348,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                         PLAY_SERVICES_RESOLUTION_REQUEST).show();
             } else {
                 Toast.makeText(getApplicationContext(),
-                        "This device is not supported.", Toast.LENGTH_LONG)
+                        "Usupported device!", Toast.LENGTH_LONG)
                         .show();
                 finish();
             }
@@ -318,8 +376,6 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
                 mGoogleApiClient, mLocationRequest, this);
 
 
-
-
     }
 
     /**
@@ -334,7 +390,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
      * Google api callback methods
      */
     @Override
-    public void onConnectionFailed(ConnectionResult result) {
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = "
                 + result.getErrorCode());
     }
@@ -357,6 +413,7 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
     @Override
     public void onLocationChanged(Location location) {
+
         // Assign the new location
         mLastLocation = location;
 
@@ -365,42 +422,27 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
 
         sharedpreferences = this.getSharedPreferences(myRefs, Context.MODE_PRIVATE);
 
+        busNumberSelect = (EditText) findViewById(R.id.busNumber);
 
-        Toast.makeText(getApplicationContext(), "Location changed!" + ": " + latitude + ", " + longitude, Toast.LENGTH_SHORT).show();
 
-        geoFire.setLocation("manhnv - " + sharedpreferences.getString(uuidTags,""), new GeoLocation(latitude, longitude), new GeoFire.CompletionListener() {
-            @Override
-            public void onComplete(String key, FirebaseError error) {
-                if (error != null) {
-                    System.err.println("There was an error saving the location to GeoFire: " + error);
-                } else {
-                    System.out.println("Location saved on server successfully!");
+        if (busNumberSelect != null) {
+            geoFire.setLocation(busNumberSelect.getText().toString() + " - " + sharedpreferences.getString(uuidTags, ""), new GeoLocation(latitude, longitude), new GeoFire.CompletionListener() {
+                @Override
+                public void onComplete(String key, FirebaseError error) {
+                    if (error != null) {
+                        System.err.println("Error on saving the location to GeoFire: " + error);
+                    } else {
+                        System.out.println("Saved location on server successfully!");
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Displaying the new location on UI
         displayLocation();
 
     }
 
-
-    //geofire to write location
-    public void setLocationdata(String mBusNumber) {
-
-        buildGeoFireClient();
-
-        geoFire.setLocation(mBusNumber, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
-            @Override
-            public void onComplete(String key, FirebaseError error) {
-                if (error != null) {
-                    System.err.println("There was an error saving the location to GeoFire: " + error);
-                } else {
-                    System.out.println("Location saved on server successfully!");
-                }
-            }
-        });
-    }
 
     //Remove Location data pushed by users
     public void removeLocationData(String keyLocation) {
@@ -421,36 +463,40 @@ public class ShareLocationActivity extends AppCompatActivity implements GoogleAp
             sharedpreferences = this.getSharedPreferences(myRefs, Context.MODE_PRIVATE);
 
             firstTime = sharedpreferences.getBoolean(firstTimeTag, true);
+
             if (firstTime) {
                 SharedPreferences.Editor editor = sharedpreferences.edit();
                 editor.putBoolean(firstTimeTag, false);
                 editor.putString(uuidTags, genUUID());
                 editor.apply();
-
-                Toast.makeText(getApplication(), "1st Run: " + sharedpreferences.getString(uuidTags, ""), Toast.LENGTH_SHORT).show();
-
-            } else {
-
-                Toast.makeText(getApplication(), "Not 1st Run", Toast.LENGTH_SHORT).show();
             }
         }
         return firstTime;
     }
 
-    //generate unique ID
+    /**
+     * generate unique ID
+     * @return string
+     */
     private static String genUUID() {
         return UUID.randomUUID().toString();
 
     }
 
-    //Build GeoFire Client
+    /**
+     * Build GeoFire Client
+     */
     public void buildGeoFireClient() {
         geoFire = new GeoFire(new Firebase("https://hanoibustracker.firebaseio.com"));
     }
 
-    //Check if editext is empty
-    private boolean isEmpty(EditText etText) {
-        if (etText.getText().toString().trim().length() > 0)
+    /**
+     * Check if edit text is empty
+     * @param edtText
+     * @return boolean
+     */
+    private boolean isEmpty(EditText edtText) {
+        if (edtText.getText().toString().trim().length() > 0)
             return false;
         return true;
     }

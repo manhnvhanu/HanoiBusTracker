@@ -54,8 +54,10 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
         LatLng latLngCenter = new LatLng(INITIAL_CENTER.latitude, INITIAL_CENTER.longitude);
 
         this.searchCircle = this.map.addCircle(new CircleOptions().center(latLngCenter).radius(100));
-        this.searchCircle.setFillColor(Color.argb(66, 255, 0, 255));
-        this.searchCircle.setStrokeColor(Color.argb(66, 0, 0, 0));
+
+        this.searchCircle.setFillColor(Color.argb(60, 244,67,54));
+        this.searchCircle.setStrokeColor(Color.argb(100, 0, 0, 0));
+
         this.map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngCenter, INITIAL_ZOOM_LEVEL));
         this.map.setOnCameraChangeListener(this);
 
@@ -65,7 +67,7 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
         this.geoFire = new GeoFire(new Firebase(GEO_FIRE_REF));
 
         // radius in km
-        this.geoQuery = this.geoFire.queryAtLocation(INITIAL_CENTER, 1);
+        this.geoQuery = this.geoFire.queryAtLocation(INITIAL_CENTER, 1.5);
 
         // setup markers
         this.markers = new HashMap<String, Marker>();
@@ -92,9 +94,13 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
         this.geoQuery.addGeoQueryEventListener(this);
     }
 
+    /**
+     * Add a new marker to the map
+     * @param key
+     * @param location
+     */
     @Override
     public void onKeyEntered(String key, GeoLocation location) {
-        // Add a new marker to the map
         Marker marker = this.map.addMarker(new MarkerOptions()
                 .position(new LatLng(location.latitude, location.longitude))
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_ic))
@@ -102,9 +108,12 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
         this.markers.put(key, marker);
     }
 
+    /**
+     * Remove any old marker
+     * @param key
+     */
     @Override
     public void onKeyExited(String key) {
-        // Remove any old marker
         Marker marker = this.markers.get(key);
         if (marker != null) {
             marker.remove();
@@ -112,9 +121,14 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
         }
     }
 
+
+    /**
+     * Move the marker
+     * @param key
+     * @param location
+     */
     @Override
     public void onKeyMoved(String key, GeoLocation location) {
-        // Move the marker
         Marker marker = this.markers.get(key);
         if (marker != null) {
             this.animateMarkerTo(marker, location.latitude, location.longitude);
@@ -127,11 +141,15 @@ public class ViewBusActivity extends FragmentActivity implements GeoQueryEventLi
     }
 
 
+    /**
+     * Display alert dialog to inform errors
+     * @param error
+     */
     @Override
     public void onGeoQueryError(FirebaseError error) {
         new AlertDialog.Builder(this)
                 .setTitle("Error")
-                .setMessage("There was an unexpected error querying GeoFire: " + error.getMessage())
+                .setMessage("There was an unexpected error querying: " + error.getMessage())
                 .setPositiveButton(android.R.string.ok, null)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
